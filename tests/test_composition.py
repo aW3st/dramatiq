@@ -76,13 +76,13 @@ def test_pipeline_results_can_be_retrieved(stub_broker, stub_worker, stub_result
     # And a broker with the results middleware
     stub_broker.add_middleware(Results(backend=stub_result_backend))
     count = 0
+
     # And an actor that adds two numbers together and stores the result
     @dramatiq.actor(store_results=True)
     def add(x, y):
         nonlocal count
         count += 1
         return x + y
-
 
     # When I pipe some messages intended for that actor together and run the pipeline
     pipe = add.message(1, 2) | (add.message(3) | add.message(4))
@@ -197,14 +197,12 @@ def test_groups_execute_inner_groups(stub_broker, stub_worker, stub_result_backe
     stub_broker.add_middleware(Results(backend=stub_result_backend))
 
     completed_cnt = []
-    # And I have an actor that sleeps for 100ms
+
     @dramatiq.actor(store_results=True)
     def wait(*args):
         completed_cnt.append(args)
 
-
     # When I group multiple groups inside one group and run it
-    t = time.monotonic()
     g = group(group(wait.message(inner, outer) for inner in range(2)) for outer in range(3))
     g.run()
 
@@ -408,6 +406,7 @@ def test_group_at_beginning_of_pipeline(stub_broker, stub_worker, stub_rate_limi
     assert pipe.get_result() == [3]
     assert len(completed_count) == 3
 
+
 def test_existing_group_callbacks_still_get_run(stub_broker, stub_worker, stub_rate_limiter_backend):
     stub_broker.add_middleware(GroupCallbacks(stub_rate_limiter_backend))
 
@@ -466,11 +465,11 @@ def test_complex_pipeline(stub_broker, stub_worker, stub_rate_limiter_backend):
     stub_broker.join(increment_completed.queue_name, timeout=100 * 1000)
     stub_worker.join()
 
-
     assert len(completed_count) == 6
     # existing group callbacks still get run
     assert len(other_completions) == 1
     assert other_completions[0] == (42,)
+
 
 def test_pipeline_that_ends_with_group(
         stub_broker, stub_worker, stub_rate_limiter_backend, stub_result_backend

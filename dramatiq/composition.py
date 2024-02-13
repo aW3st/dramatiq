@@ -19,7 +19,6 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Iterable
 from uuid import uuid4
-from copy import deepcopy
 
 from .broker import get_broker
 from .middleware.group_callbacks import GROUP_CALLBACK_BARRIER_TTL, GroupCallbacks
@@ -53,7 +52,6 @@ class pipeline:
                 self.rate_limiter_backend = middleware.rate_limiter_backend
                 break
         self._messages = self.generate_messages()
-
 
     def generate_messages(self) -> list[tuple[Message]]:
         messages = []
@@ -362,10 +360,7 @@ class group:
             else:
                 messages.append(child)
             if self.completion_callbacks:
-                try:
-                    child.set_completion_uuid_and_callbacks(self.completion_uuid, self.completion_callbacks)
-                except:
-                    breakpoint()
+                child.set_completion_uuid_and_callbacks(self.completion_uuid, self.completion_callbacks)
         return messages
 
     def get_barrier_number(self) -> list[Message | pipeline]:
