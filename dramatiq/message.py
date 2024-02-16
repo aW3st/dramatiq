@@ -178,6 +178,9 @@ class Message(Generic[R]):
     def __lt__(self, other: "Message") -> bool:
         return dataclasses.astuple(self) < dataclasses.astuple(other)
 
+    def __hash__(self):
+        return self.message_id.__hash__()
+
     # Backwards-compatibility with namedtuple.
     _asdict = asdict
 
@@ -191,3 +194,11 @@ class Message(Generic[R]):
 
     def _replace(self, **changes) -> "Message[R]":
         return dataclasses.replace(self, **changes)
+
+    def set_completion_uuid_and_callbacks(self, uuid, callbacks):
+        group_callbacks = self.options.get("group_callbacks", {})
+        group_callbacks[uuid] = callbacks
+        self.options["group_callbacks"] = group_callbacks
+
+    def remove_group_completion_uuids(self):
+        self.options.pop("group_callbacks", None)
